@@ -16,7 +16,9 @@ requires-python = ">=3.11,<3.12"
 dependencies = [
     "python-telegram-bot[job-queue] (~=22.5)",
     "requests~=2.32.5",
-    "rgb-lib @ ./source/rgb_lib-0.3.0b20-cp311-cp311-macosx_15_0_arm64.whl",
+    "rgb-lib @ https://github.com/UTEXO-Protocol/rgb-lib-python/releases/download/v0.3.0-beta.20/rgb_lib-0.3.0b20-cp311-cp311-macosx_15_0_arm64.whl ; sys_platform == 'darwin'",
+    "rgb-lib @ https://github.com/UTEXO-Protocol/rgb-lib-python/releases/download/v0.3.0-beta.20/rgb_lib-0.3.0b20-cp311-cp311-manylinux_2_35_aarch64.whl ; sys_platform == 'linux' and platform_machine == 'aarch64'",
+    "rgb-lib @ https://github.com/UTEXO-Protocol/rgb-lib-python/releases/download/v0.3.0-beta.20/rgb_lib-0.3.0b20-cp311-cp311-manylinux_2_35_x86_64.whl ; sys_platform == 'linux' and platform_machine == 'x86_64'",
     "sqlalchemy~=2.0.43",
 ]
 

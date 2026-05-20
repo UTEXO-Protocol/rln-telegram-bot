@@ -6,17 +6,22 @@ import sys
 from configparser import ConfigParser, MissingSectionHeaderError
 
 
-def _ensure_rgb_lib_dylib():
-    """UTXO wheels ship librgblibuniffi.dylib; older bindings look for libuniffi.dylib."""
+def _ensure_rgb_lib_native_lib():
+    """UTXO wheels ship librgblibuniffi.*; older bindings look for libuniffi.*."""
+    if sys.platform == "darwin":
+        lib_name, link_name = "librgblibuniffi.dylib", "libuniffi.dylib"
+    else:
+        lib_name, link_name = "librgblibuniffi.so", "libuniffi.so"
     for site_dir in site.getsitepackages():
         pkg_dir = os.path.join(site_dir, "rgb_lib")
-        dylib = os.path.join(pkg_dir, "librgblibuniffi.dylib")
-        link = os.path.join(pkg_dir, "libuniffi.dylib")
-        if os.path.isfile(dylib) and not os.path.exists(link):
-            os.symlink("librgblibuniffi.dylib", link)
+        native_lib = os.path.join(pkg_dir, lib_name)
+        link = os.path.join(pkg_dir, link_name)
+        if os.path.isfile(native_lib) and not os.path.exists(link):
+            os.symlink(lib_name, link)
 
 
-_ensure_rgb_lib_dylib()
+_ensure_rgb_lib_native_lib()
+
 
 from rgb_lib import BitcoinNetwork
 

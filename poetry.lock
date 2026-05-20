@@ -982,17 +982,50 @@ use-chardet-on-py3 = ["chardet (>=3.0.2,<6)"]
 [[package]]
 name = "rgb-lib"
 version = "0.3.0b20"
-description = "RGB Lib Python language bindings (UTEXO)."
+description = "RGB Lib Python language bindings."
 optional = false
-python-versions = ">=3.11,<3.12"
+python-versions = ">=3.9.0"
 groups = ["main"]
+markers = "sys_platform == \"darwin\""
 files = [
-    {file = "rgb_lib-0.3.0b20-cp311-cp311-macosx_15_0_arm64.whl", hash = "sha256:48b74198300a23767899ae13607e56d4dfaacf30d945c82410eb0491ab7d9278"},
+    {file = "rgb_lib-0.3.0b20-cp311-cp311-macosx_15_0_arm64.whl", hash = "sha256:713a6a303ddb630e0ff4a4930004f189b37e7d3175a399ece02b34b5cfd41800"},
 ]
 
 [package.source]
-type = "file"
-url = "source/rgb_lib-0.3.0b20-cp311-cp311-macosx_15_0_arm64.whl"
+type = "url"
+url = "https://github.com/UTEXO-Protocol/rgb-lib-python/releases/download/v0.3.0-beta.20/rgb_lib-0.3.0b20-cp311-cp311-macosx_15_0_arm64.whl"
+
+[[package]]
+name = "rgb-lib"
+version = "0.3.0b20"
+description = "RGB Lib Python language bindings."
+optional = false
+python-versions = ">=3.9.0"
+groups = ["main"]
+markers = "sys_platform == \"linux\" and platform_machine == \"aarch64\""
+files = [
+    {file = "rgb_lib-0.3.0b20-cp311-cp311-manylinux_2_35_aarch64.whl", hash = "sha256:d381e89c05bc13b9c5c644f2b4ae8480c6a7d4ee81f6f120e44dd12e10e2d469"},
+]
+
+[package.source]
+type = "url"
+url = "https://github.com/UTEXO-Protocol/rgb-lib-python/releases/download/v0.3.0-beta.20/rgb_lib-0.3.0b20-cp311-cp311-manylinux_2_35_aarch64.whl"
+
+[[package]]
+name = "rgb-lib"
+version = "0.3.0b20"
+description = "RGB Lib Python language bindings."
+optional = false
+python-versions = ">=3.9.0"
+groups = ["main"]
+markers = "sys_platform == \"linux\" and platform_machine == \"x86_64\""
+files = [
+    {file = "rgb_lib-0.3.0b20-cp311-cp311-manylinux_2_35_x86_64.whl", hash = "sha256:8050d9f88a10c6d11561a26cad7c20a3f6ffb919c54d5ad1682a661caf80f585"},
+]
+
+[package.source]
+type = "url"
+url = "https://github.com/UTEXO-Protocol/rgb-lib-python/releases/download/v0.3.0-beta.20/rgb_lib-0.3.0b20-cp311-cp311-manylinux_2_35_x86_64.whl"
 
 [[package]]
 name = "rich"
@@ -1245,4 +1278,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.12"
-content-hash = "594a8b288941c784a47f02371a38a92516b0e3c90d9275a0792f0b45a2bed269"
+content-hash = "1c237e0bf67e6d8213807faf442a33ac959ef7eeed54c6542ad4b8c3ae5c0540"
