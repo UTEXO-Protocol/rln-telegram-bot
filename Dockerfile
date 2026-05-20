@@ -1,4 +1,4 @@
-FROM python:3.12-slim-trixie
+FROM python:3.11-slim-trixie
 
 ENV POETRY_VERSION=2.2.1
 ENV POETRY_HOME=/opt/poetry
@@ -17,8 +17,10 @@ ENV PATH="${PATH}:${POETRY_VENV}/bin"
 
 WORKDIR /app
 
-COPY . .
+COPY pyproject.toml poetry.lock README.md ./
+COPY rgb_ln_telegram_bot ./rgb_ln_telegram_bot
 
+# rgb-lib: platform-specific wheel URLs in pyproject.toml (linux arm64/amd64, macOS arm64)
 RUN poetry install --no-interaction --no-cache --without dev
 
 CMD [ "poetry", "run", "bot" ]

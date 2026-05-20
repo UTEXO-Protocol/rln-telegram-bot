@@ -60,6 +60,7 @@ INVOICE_PRICE = get_or_exit(conf, "INVOICE_PRICE", integer=True)
 UTXOS_TO_CREATE = get_or_exit(conf, "UTXOS_TO_CREATE", integer=True)
 FEE_RATE = get_or_exit(conf, "FEE_RATE", integer=True)
 DEVELOPER_CHAT_ID = get_or_default(conf, "DEVELOPER_CHAT_ID", "")
+RLN_AUTH_TOKEN = get_or_default(conf, "RLN_AUTH_TOKEN", "")
 LOG_LEVEL_CONSOLE = get_or_default(conf, "LOG_LEVEL_CONSOLE", "INFO")
 
 # vars set at runtime

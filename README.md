@@ -4,69 +4,82 @@ Telegram bot to test RGB payments on the Lightning Network.
 
 It requires a running instance of [rgb-lightning-node (RLN)].
 
+It uses [UTEXO rgb-lib] Python bindings **v0.3.0-beta.20** from
+[rgb-lib-python releases](https://github.com/UTEXO-Protocol/rgb-lib-python/releases/tag/v0.3.0-beta.20).
+Python **3.11** is required (`cp311` wheels; platform picked automatically in `pyproject.toml`).
+
 ## Build and run
 
-First, clone the project:
+Clone the project:
+
 ```sh
-git clone https://github.com/RGB-Tools/rln-telegram-bot
+git clone https://github.com/UTEXO-Protocol/rln-telegram-bot
+cd rln-telegram-bot
 ```
 
-Then obtain an API token that is necessary to create the Telegram bot.
-The token can be obtained by contacting `@BotFather` on Telegram, issuing
-the `/newbot` command and following the steps.
+Obtain a Telegram API token from [@BotFather](https://t.me/BotFather) (`/newbot`).
 
-Once you obtained the token you can copy the sample config file (`cp
-config.ini.sample config.ini`) and set the `API_TOKEN` key to its value.
+Copy and edit config:
 
-Then, issue an asset on your RGB LN node, set the `ASSET_ID` key of the
-config file to its ID, set the `LN_NODE_URL` so the bot can call the RGN LN
-node APIs, set the `LN_ANNOUNCEMENT_ADDR` to the public LN endpoint of the RGN
-LN node and optionally set the other keys to suit your needs. The RLN LN node
-needs to be reachable at the provided URL and unlocked for the bot to work.
-
-Finally, provided you have [poetry] installed, you can install and run the bot
-executing:
 ```sh
+cp config.ini.sample config.ini
+```
+
+Set at least:
+
+- `API_TOKEN` — Telegram bot token
+- `ASSET_ID` — RGB asset ID from `POST /issueassetnia` on your RLN node
+- `LN_NODE_URL` — RLN HTTP API (e.g. `http://localhost:3001`)
+- `LN_ANNOUNCEMENT_ADDR` — LN peer host:port (e.g. `127.0.0.1:9735` for local tests)
+
+RLN must be **unlocked** and reachable. If authentication is enabled, set `RLN_AUTH_TOKEN`.
+
+Install and run (macOS / Linux host):
+
+```sh
+poetry env use python3.11
 poetry install
 poetry run bot
 ```
 
-The docker image can be built with:
+`poetry install` downloads the matching rgb-lib wheel from GitHub (macOS arm64 or Linux manylinux).
+
+## Docker
+
+Build:
+
 ```sh
 docker build -t rln-telegram-bot .
 ```
 
-The docker image can be run with:
+Run (RLN on the host — not `localhost` inside the container):
+
 ```sh
-docker run \
-    -v ./config.ini:/app/config.ini:ro \
-    -v ./data:/app/data:rw \
-    rln-telegram-bot
+# use host.docker.internal in config.ini for LN_NODE_URL when RLN runs on the Mac/PC host
+docker run --rm \
+  --add-host=host.docker.internal:host-gateway \
+  -v "$(pwd)/config.ini:/app/config.ini:ro" \
+  -v "$(pwd)/data:/app/data:rw" \
+  rln-telegram-bot
+```
+
+Example `config.ini` for Docker on macOS:
+
+```ini
+LN_NODE_URL=http://host.docker.internal:3001
 ```
 
 ## Develop
 
-When developing, you can run the following utilities:
 ```sh
-# lint code
 poetry run pylint rgb_ln_telegram_bot
-
-# format code
 poetry run black rgb_ln_telegram_bot
-
-# sort imports
 poetry run isort --profile black rgb_ln_telegram_bot
-
-# find unused code
 poetry run vulture rgb_ln_telegram_bot
-
-# check compliance with docstring conventions
 poetry run flake8 rgb_ln_telegram_bot
-
-# check for known vulnerabilities
 poetry run pip-audit
 ```
 
-
 [poetry]: https://python-poetry.org/docs/
-[rgb-lightning-node (RLN)]: https://github.com/RGB-Tools/rgb-lightning-node
+[rgb-lightning-node (RLN)]: https://github.com/UTEXO-Protocol/rgb-lightning-node
+[UTEXO rgb-lib]: https://github.com/UTEXO-Protocol/rgb-lib

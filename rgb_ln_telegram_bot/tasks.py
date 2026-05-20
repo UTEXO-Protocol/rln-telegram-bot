@@ -74,7 +74,7 @@ async def get_invoice_check_task(context):
             invoice = purchase.invoice
             LOGGER.info("Getting status for invoice %s", invoice)
             status = get_invoice_status(invoice).lower()
-            if status == "pending":
+            if status in ("pending", "claimable", "claiming"):
                 continue
             if status == "succeeded":
                 LOGGER.debug("Invoice %s has been paid", purchase.invoice)
@@ -96,6 +96,24 @@ async def get_invoice_check_task(context):
                     parse_mode=ParseMode.MARKDOWN_V2,
                 )
                 purchase.status = PurchaseStatus.EXPIRED
+                session.commit()
+            elif status == "cancelled":
+                await _send_msg(
+                    context,
+                    purchase.chat_id,
+                    msgs.INVOICE_CANCELLED,
+                    parse_mode=ParseMode.MARKDOWN_V2,
+                )
+                purchase.status = PurchaseStatus.EXPIRED
+                session.commit()
+            elif status == "failed":
+                await _send_msg(
+                    context,
+                    purchase.chat_id,
+                    msgs.INVOICE_FAILED,
+                    parse_mode=ParseMode.MARKDOWN_V2,
+                )
+                purchase.status = PurchaseStatus.FAILED
                 session.commit()
             else:
                 msg = f"Invoice in unexpected status: {status}"

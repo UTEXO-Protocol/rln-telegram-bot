@@ -9,17 +9,16 @@ classifiers = [
   "Development Status :: 4 - Beta",
   "License :: OSI Approved :: MIT License",
   "Operating System :: POSIX :: Linux",
-  "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
-  "Programming Language :: Python :: 3.12",
-  "Programming Language :: Python :: 3.13",
   "Topic :: Other/Nonlisted Topic",
 ]
-requires-python = "~=3.10"
+requires-python = ">=3.11,<3.12"
 dependencies = [
     "python-telegram-bot[job-queue] (~=22.5)",
     "requests~=2.32.5",
-    "rgb-lib==0.3.0b4",
+    "rgb-lib @ https://github.com/UTEXO-Protocol/rgb-lib-python/releases/download/v0.3.0-beta.20/rgb_lib-0.3.0b20-cp311-cp311-macosx_15_0_arm64.whl ; sys_platform == 'darwin'",
+    "rgb-lib @ https://github.com/UTEXO-Protocol/rgb-lib-python/releases/download/v0.3.0-beta.20/rgb_lib-0.3.0b20-cp311-cp311-manylinux_2_35_aarch64.whl ; sys_platform == 'linux' and platform_machine == 'aarch64'",
+    "rgb-lib @ https://github.com/UTEXO-Protocol/rgb-lib-python/releases/download/v0.3.0-beta.20/rgb_lib-0.3.0b20-cp311-cp311-manylinux_2_35_x86_64.whl ; sys_platform == 'linux' and platform_machine == 'x86_64'",
     "sqlalchemy~=2.0.43",
 ]
 
@@ -40,7 +39,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.black]
 line_length = 100
-target_version = ["py310", "py311", "py312", "py313"]
+target_version = ["py311"]
 
 [tool.vulture]
 min_confidence = 100

@@ -181,3 +181,15 @@ LN payment received\. Here's your sticker, congrats\!
 INVOICE_EXPIRED = f"""
 Invoice has expired\. Use /{sett.GETINVOICE_CMD} to request a new one\.
 """
+
+INVOICE_CANCELLED = f"""
+Invoice was cancelled\. Use /{sett.GETINVOICE_CMD} to request a new one\.
+"""
+
+INVOICE_FAILED = f"""
+Invoice payment failed\. Use /{sett.GETINVOICE_CMD} to request a new one\.
+"""
+
+RLN_REQUEST_FAILED = """
+Could not complete the request against the RGB LN node\. Try again later\.
+"""
