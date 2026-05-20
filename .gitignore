@@ -6,3 +6,4 @@
 /config.ini
 /data*
 /dist
+/source/*.whl

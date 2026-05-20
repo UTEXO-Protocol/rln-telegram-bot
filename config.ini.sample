@@ -23,6 +23,8 @@ UTXOS_TO_CREATE=3
 FEE_RATE=100
 
 ## optional settings
+# Biscuit token when the RGB LN node has authentication enabled
+# RLN_AUTH_TOKEN=
 # ID of the Telegram chat for developer messages
 DEVELOPER_CHAT_ID=YourDeveloperChatID
 # bot log level

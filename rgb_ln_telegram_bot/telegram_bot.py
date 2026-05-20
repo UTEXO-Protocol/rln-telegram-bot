@@ -11,6 +11,7 @@ from telegram.constants import ParseMode
 from telegram.error import Forbidden
 
 from rgb_ln_telegram_bot.exceptions import (
+    APIException,
     InvalidTransportEndpoints,
     RecipientIDAlreadyUsed,
 )
@@ -119,7 +120,11 @@ async def _validate_user_input(update, user_input, pending_ass_req, pending_btc_
 
 async def _send_to_address(update, session, user_input, pending_btc_req):
     await _reply(update, msgs.SENDING_BTC())
-    txid = send_btc(user_input)
+    try:
+        txid = send_btc(user_input)
+    except APIException:
+        LOGGER.exception("Send BTC failed")
+        return await _reply(update, msgs.RLN_REQUEST_FAILED)
     pending_btc_req.status = SendBtcRequestStatus.SUCCESS
     pending_btc_req.txid = txid
     pending_btc_req.address = user_input
@@ -151,9 +156,9 @@ async def _send_to_invoice(
         session.add(pending_ass_req)
         session.commit()
 
-    recipient_info = rgb_lib.RecipientInfo(invoice_data.recipient_id)
-    if recipient_info.network() != sett.NETWORK:
+    if invoice_data.network != sett.NETWORK:
         return await _reply(update, msgs.RGB_INVOICE_INVALID_NETWORK)
+    recipient_info = rgb_lib.RecipientInfo(invoice_data.recipient_id)
     if recipient_info.recipient_type() != rgb_lib.RecipientType.BLIND:
         return await _reply(update, msgs.RGB_INVOICE_INVALID_TYPE)
 
@@ -174,6 +179,9 @@ async def _send_to_invoice(
         pending_ass_req.status = SendRequestStatus.RGB_INVOICE_ALREADY_USED
         session.commit()
         await _reply(update, msgs.RGB_INVOICE_ALREADY_USED)
+    except APIException:
+        LOGGER.exception("Send asset failed")
+        await _reply(update, msgs.RLN_REQUEST_FAILED)
 
 
 async def help_handler(update, _context):
@@ -338,7 +346,11 @@ async def get_invoice_handler(update, _context):
             )
 
         LOGGER.info("Getting invoice for chat %s", update.effective_chat.id)
-        invoice = get_invoice()
+        try:
+            invoice = get_invoice()
+        except APIException:
+            LOGGER.exception("LN invoice creation failed")
+            return await _reply(update, msgs.RLN_REQUEST_FAILED)
         purchase = Purchase(invoice=invoice, chat_id=update.effective_chat.id)
         session.add(purchase)
         session.commit()

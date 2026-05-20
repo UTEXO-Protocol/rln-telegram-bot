@@ -1,8 +1,22 @@
 """Utilities module."""
 
 import os
+import site
 import sys
 from configparser import ConfigParser, MissingSectionHeaderError
+
+
+def _ensure_rgb_lib_dylib():
+    """UTXO wheels ship librgblibuniffi.dylib; older bindings look for libuniffi.dylib."""
+    for site_dir in site.getsitepackages():
+        pkg_dir = os.path.join(site_dir, "rgb_lib")
+        dylib = os.path.join(pkg_dir, "librgblibuniffi.dylib")
+        link = os.path.join(pkg_dir, "libuniffi.dylib")
+        if os.path.isfile(dylib) and not os.path.exists(link):
+            os.symlink("librgblibuniffi.dylib", link)
+
+
+_ensure_rgb_lib_dylib()
 
 from rgb_lib import BitcoinNetwork
 
@@ -58,5 +72,18 @@ def parse_network(network):
             return BitcoinNetwork.SIGNET
         case "Testnet":
             return BitcoinNetwork.TESTNET
+        case "Testnet4":
+            return BitcoinNetwork.TESTNET4
+        case "SignetCustom":
+            return BitcoinNetwork.SIGNET_CUSTOM
         case _:
             die(f"Node is running on an unsupported network: {network}")
+
+
+def find_asset_label(assets, asset_id):
+    """Return ticker or name for asset_id across all listassets schema buckets."""
+    for bucket in ("nia", "uda", "ifa", "cfa"):
+        for asset in assets.get(bucket) or []:
+            if asset.get("asset_id") == asset_id:
+                return asset.get("ticker") or asset.get("name")
+    return None

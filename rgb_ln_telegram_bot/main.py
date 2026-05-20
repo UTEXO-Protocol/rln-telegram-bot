@@ -14,6 +14,7 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters
 from . import msgs
 from . import settings as sett
 from . import tasks
+from .exceptions import APIException
 from .ln import get_network_info, get_node_info, list_assets
 from .telegram_bot import (
     get_asset_handler,
@@ -25,7 +26,7 @@ from .telegram_bot import (
     start_handler,
     unknown_command_handler,
 )
-from .utils import die, parse_network
+from .utils import die, find_asset_label, parse_network
 
 LOGGER = getLogger(__name__)
 
@@ -38,6 +39,8 @@ def main():
         node_info = get_node_info()
     except requests.exceptions.ConnectionError:
         die("Cannot connect to the node")
+    except APIException as exc:
+        die(f"Cannot get node info: {exc}")
     sett.LIGHTNING_NODE_ID = node_info["pubkey"]
     sett.NODE_URI = f"{sett.LIGHTNING_NODE_ID}@{sett.LN_ANNOUNCEMENT_ADDR}"
 
@@ -45,10 +48,7 @@ def main():
     sett.NETWORK = parse_network(network_info["network"])
 
     assets = list_assets()
-    for asset in assets["nia"]:
-        if asset["asset_id"] == sett.ASSET_ID:
-            sett.ASSET_TICKER = asset["ticker"]
-            break
+    sett.ASSET_TICKER = find_asset_label(assets, sett.ASSET_ID) or ""
     if not sett.ASSET_TICKER:
         die(f'Cannot find asset with ID "{sett.ASSET_ID}"')
     else:

@@ -1,4 +1,4 @@
-FROM python:3.12-slim-trixie
+FROM python:3.11-slim-trixie
 
 ENV POETRY_VERSION=2.2.1
 ENV POETRY_HOME=/opt/poetry
@@ -18,6 +18,16 @@ ENV PATH="${PATH}:${POETRY_VENV}/bin"
 WORKDIR /app
 
 COPY . .
+
+# UTEXO rgb-lib: place a manylinux cp311 wheel in source/, or pass RGB_LIB_WHEEL_URL
+ARG RGB_LIB_WHEEL_URL=
+RUN if ls source/rgb_lib-*-manylinux_*.whl >/dev/null 2>&1; then \
+        pip install source/rgb_lib-*-manylinux_*.whl; \
+    elif [ -n "$RGB_LIB_WHEEL_URL" ]; then \
+        pip install "$RGB_LIB_WHEEL_URL"; \
+    else \
+        echo "No Linux rgb-lib wheel in source/ and RGB_LIB_WHEEL_URL is unset" >&2; exit 1; \
+    fi
 
 RUN poetry install --no-interaction --no-cache --without dev
 
