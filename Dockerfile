@@ -1,26 +1,39 @@
-FROM python:3.11-slim-trixie
+# syntax=docker/dockerfile:1.7
 
-ENV POETRY_VERSION=2.2.1
-ENV POETRY_HOME=/opt/poetry
-ENV POETRY_VENV=/opt/poetry-venv
-ENV POETRY_CACHE_DIR=/opt/.cache
+# ---- Builder ----
+FROM python:3.11-slim-trixie AS builder
 
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends libssl-dev \
-    && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+ENV POETRY_VERSION=2.2.1 \
+    POETRY_NO_INTERACTION=1 \
+    POETRY_VIRTUALENVS_IN_PROJECT=1 \
+    POETRY_VIRTUALENVS_CREATE=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_ROOT_USER_ACTION=ignore
 
-RUN python3 -m venv $POETRY_VENV \
-    && $POETRY_VENV/bin/pip install -U pip setuptools \
-    && $POETRY_VENV/bin/pip install poetry==${POETRY_VERSION}
-
-ENV PATH="${PATH}:${POETRY_VENV}/bin"
+RUN pip install --no-cache-dir "poetry==${POETRY_VERSION}"
 
 WORKDIR /app
 
 COPY pyproject.toml poetry.lock README.md ./
 COPY rgb_ln_telegram_bot ./rgb_ln_telegram_bot
 
-# rgb-lib: platform-specific wheel URLs in pyproject.toml (linux arm64/amd64, macOS arm64)
-RUN poetry install --no-interaction --no-cache --without dev
+RUN poetry install --no-interaction --no-cache --without dev \
+    && /app/.venv/bin/pip uninstall -y pip setuptools wheel 2>/dev/null || true \
+    && find /app/.venv -depth -type d -name '__pycache__' -exec rm -rf {} + \
+    && find /app/.venv -type f -name '*.pyc' -delete \
+    && find /app/.venv -type d -name 'tests' -exec rm -rf {} + 2>/dev/null || true
 
-CMD [ "poetry", "run", "bot" ]
+# ---- Runtime ----
+FROM python:3.11-slim-trixie AS runtime
+
+ENV PATH="/app/.venv/bin:$PATH" \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+COPY --from=builder /app/.venv /app/.venv
+COPY --from=builder /app/rgb_ln_telegram_bot /app/rgb_ln_telegram_bot
+
+CMD ["bot"]
