@@ -73,7 +73,7 @@ to the settled status\)\.
 Once the tranfer has settled you can open a channel with
 `{sett.NODE_URI}`
 using
-`{sett.ASSET_TICKER}` (`{sett.ASSET_ID}`)
+`{sett.ASSET_TICKER}` \(`{sett.ASSET_ID}`\)
 as the RGB asset
 """
 )
