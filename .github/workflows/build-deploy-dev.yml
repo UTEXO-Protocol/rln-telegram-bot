@@ -1,0 +1,40 @@
+name: "Build & Deploy to Dev"
+
+env:
+  DOCKER_VERSION: ${{ github.sha }}
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-dev:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & push docker images
+        run: make docker
+
+  deploy:
+    needs: build-dev
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to DEV server via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEV_SERVER_HOST }}
+          username: ${{ secrets.DEV_SERVER_USER }}
+          key: ${{ secrets.DEV_SERVER_SSH_KEY }}
+          script: ${{ secrets.DEV_DEPLOY_SCRIPT }}
