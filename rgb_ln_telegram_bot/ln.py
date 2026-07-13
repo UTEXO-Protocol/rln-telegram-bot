@@ -131,7 +131,11 @@ def list_assets():
 
 def refresh_transfers():
     """Call the /refreshtransfers API."""
-    return _request("POST", "/refreshtransfers", {"skip_sync": False})
+    return _request(
+        "POST",
+        "/refreshtransfers",
+        {"asset_id": None, "filter": [], "skip_sync": False},
+    )
 
 
 def send_asset(blinded_utxo, transport_endpoints):
