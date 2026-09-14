@@ -159,7 +159,6 @@ def send_asset(blinded_utxo, transport_endpoints):
                     }
                 ]
             },
-            "skip_sync": False,
         },
     )
     return res["txid"]
