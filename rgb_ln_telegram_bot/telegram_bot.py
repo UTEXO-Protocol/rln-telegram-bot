@@ -170,7 +170,6 @@ async def _send_to_invoice(
         pending_ass_req.txid = txid
         session.commit()
         await _reply(update, msgs.ASSET_SENT().format(txid=txid))
-        refresh_transfers()
     except InvalidTransportEndpoints:
         LOGGER.warning("Send failed because RGB invoice has invalid transport endpoints")
         await _reply(update, msgs.INVALID_RGB_TRANSPORT_ENDPOINTS)
@@ -182,6 +181,11 @@ async def _send_to_invoice(
     except APIException:
         LOGGER.exception("Send asset failed")
         await _reply(update, msgs.RLN_REQUEST_FAILED)
+    else:
+        try:
+            refresh_transfers()
+        except APIException:
+            LOGGER.exception("Refresh transfers failed")
 
 
 async def help_handler(update, _context):
