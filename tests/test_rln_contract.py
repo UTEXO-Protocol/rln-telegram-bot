@@ -1,4 +1,4 @@
-"""Contracts for RLN PR #212 at the revision recorded in rln-revision."""
+"""Contracts for RLN PR #212 at revision 89ebe9f."""
 
 import time
 import unittest

@@ -1,1 +1,1 @@
-"""Offline contract tests and an opt-in regtest flow."""
+"""Offline contract tests for the bot's RLN integration."""

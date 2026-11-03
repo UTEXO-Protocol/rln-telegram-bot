@@ -35,6 +35,5 @@ WORKDIR /app
 
 COPY --from=builder /app/.venv /app/.venv
 COPY --from=builder /app/rgb_ln_telegram_bot /app/rgb_ln_telegram_bot
-COPY rln-revision /app/rln-revision
 
 CMD ["bot"]

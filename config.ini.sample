@@ -3,7 +3,7 @@
 API_TOKEN=YourAPIToken
 # path for the bot's data directory
 DATA_DIR=data
-# Unlocked RLN from PR #212; exact supported commit is in rln-revision
+# Unlocked RLN from PR #212, deployed separately; supported commit is in README.md
 LN_NODE_URL=http://localhost:3001
 # ID of the asset the bot uses
 ASSET_ID=rgb:2uSYWzE-YvkUEXg6C-vK7gV5pqj-4LAun1jky-D73672LhW-unCWjMA
