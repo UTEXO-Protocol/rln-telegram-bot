@@ -7,6 +7,7 @@ import requests
 from rgb_ln_telegram_bot.exceptions import (
     AllocationsAlreadyAvailable,
     APIException,
+    InvalidInvoice,
     InvalidTransportEndpoints,
     RecipientIDAlreadyUsed,
 )
@@ -19,6 +20,7 @@ _ERROR_NAMES = {
     "AllocationsAlreadyAvailable": AllocationsAlreadyAvailable,
     "InvalidTransportEndpoints": InvalidTransportEndpoints,
     "RecipientIDAlreadyUsed": RecipientIDAlreadyUsed,
+    "InvalidInvoice": InvalidInvoice,
 }
 
 
@@ -36,7 +38,7 @@ def _check_if_err(res):
     name = res.get("name", "")
     exc_type = _ERROR_NAMES.get(name)
     if exc_type is not None:
-        raise exc_type
+        raise exc_type(err)
     if "Allocations already available" in err:
         raise AllocationsAlreadyAvailable
     if "Invalid transport endpoints" in err:
@@ -55,12 +57,16 @@ def _request(method, path, json_payload=None):
     }
     if json_payload is not None:
         kwargs["json"] = json_payload
-    response = requests.request(method, url, **kwargs)
+    try:
+        response = requests.request(method, url, **kwargs)
+    except requests.RequestException as exc:
+        raise APIException(f"RLN request failed: {type(exc).__name__}") from exc
     try:
         res = response.json()
     except ValueError as exc:
-        response.raise_for_status()
         raise APIException(f"Invalid JSON response (HTTP {response.status_code})") from exc
+    if not isinstance(res, dict):
+        raise APIException(f"Expected a JSON object (HTTP {response.status_code})")
     if "error" in res:
         _check_if_err(res)
     if not response.ok:
@@ -129,37 +135,28 @@ def list_assets():
     return _request("POST", "/listassets", {"filter_asset_schemas": []})
 
 
+def decode_rgb_invoice(invoice):
+    """Decode the complete invoice using the same RGB version as the wallet."""
+    return _request("POST", "/decodergbinvoice", {"invoice": invoice})
+
+
 def refresh_transfers():
     """Call the /refreshtransfers API."""
-    return _request(
-        "POST",
-        "/refreshtransfers",
-        {"asset_id": None, "filter": [], "skip_sync": False},
-    )
+    return _request("POST", "/refreshtransfers", {"filter": [], "skip_sync": False})
 
 
-def send_asset(blinded_utxo, transport_endpoints):
-    """Call the /sendrgb API."""
+def send_asset(invoice):
+    """Send to a complete invoice, retaining its proxy authentication data."""
     res = _request(
         "POST",
-        "/sendrgb",
+        "/sendrgbinvoice",
         {
+            "invoice": invoice,
+            "asset_id": sett.ASSET_ID,
+            "amount": sett.ASSET_AMOUNT_TO_SEND,
             "donation": True,
             "fee_rate": sett.FEE_RATE,
             "min_confirmations": 0,
-            "recipient_map": {
-                sett.ASSET_ID: [
-                    {
-                        "recipient_id": blinded_utxo,
-                        "assignment": {
-                            "type": "Fungible",
-                            "value": sett.ASSET_AMOUNT_TO_SEND,
-                        },
-                        "transport_endpoints": transport_endpoints,
-                    }
-                ]
-            },
-            "skip_sync": False,
         },
     )
     return res["txid"]

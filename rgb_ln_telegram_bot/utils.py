@@ -1,29 +1,20 @@
 """Utilities module."""
 
 import os
-import site
 import sys
 from configparser import ConfigParser, MissingSectionHeaderError
 
+from embit import base58, bech32
+from embit.networks import NETWORKS
 
-def _ensure_rgb_lib_native_lib():
-    """UTXO wheels ship librgblibuniffi.*; older bindings look for libuniffi.*."""
-    if sys.platform == "darwin":
-        lib_name, link_name = "librgblibuniffi.dylib", "libuniffi.dylib"
-    else:
-        lib_name, link_name = "librgblibuniffi.so", "libuniffi.so"
-    for site_dir in site.getsitepackages():
-        pkg_dir = os.path.join(site_dir, "rgb_lib")
-        native_lib = os.path.join(pkg_dir, lib_name)
-        link = os.path.join(pkg_dir, link_name)
-        if os.path.isfile(native_lib) and not os.path.exists(link):
-            os.symlink(lib_name, link)
-
-
-_ensure_rgb_lib_native_lib()
-
-
-from rgb_lib import BitcoinNetwork
+_ADDRESS_NETWORKS = {
+    "Mainnet": "main",
+    "Regtest": "regtest",
+    "Signet": "signet",
+    "Testnet": "test",
+    "Testnet4": "test",
+    "SignetCustom": "signet",
+}
 
 
 def die(message=None, exit_code=1):
@@ -67,27 +58,26 @@ def get_or_default(conf, var_name, default_val):
 
 
 def parse_network(network):
-    """Parse the given network string and return the corresponding enum."""
-    match network:
-        case "Mainnet":
-            return BitcoinNetwork.MAINNET
-        case "Regtest":
-            return BitcoinNetwork.REGTEST
-        case "Signet":
-            return BitcoinNetwork.SIGNET
-        case "Testnet":
-            return BitcoinNetwork.TESTNET
-        case "Testnet4":
-            return BitcoinNetwork.TESTNET4
-        case "SignetCustom":
-            return BitcoinNetwork.SIGNET_CUSTOM
-        case _:
-            die(f"Node is running on an unsupported network: {network}")
+    """Validate and retain RLN's network name for invoice comparisons."""
+    if network not in _ADDRESS_NETWORKS:
+        die(f"Node is running on an unsupported network: {network}")
+    return network
+
+
+def valid_bitcoin_address(address, network):
+    """Check Base58Check or SegWit/Bech32m checksums and network prefixes."""
+    params = NETWORKS[_ADDRESS_NETWORKS[network]]
+    try:
+        payload = base58.decode_check(address)
+        return len(payload) == 21 and payload[:1] in (params["p2pkh"], params["p2sh"])
+    except ValueError:
+        version, _program = bech32.decode(params["bech32"], address)
+        return version is not None
 
 
 def find_asset_label(assets, asset_id):
     """Return ticker or name for asset_id across all listassets schema buckets."""
-    for bucket in ("nia", "uda", "ifa", "cfa"):
+    for bucket in ("nia", "uda", "ifa", "cfa", "bfa"):
         for asset in assets.get(bucket) or []:
             if asset.get("asset_id") == asset_id:
                 return asset.get("ticker") or asset.get("name")

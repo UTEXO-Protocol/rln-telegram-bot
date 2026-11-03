@@ -5,17 +5,24 @@ import time
 from functools import wraps
 from logging import getLogger
 
-import rgb_lib
 import sqlalchemy as sa
 from telegram.constants import ParseMode
 from telegram.error import Forbidden
 
 from rgb_ln_telegram_bot.exceptions import (
     APIException,
+    InvalidInvoice,
     InvalidTransportEndpoints,
     RecipientIDAlreadyUsed,
 )
-from rgb_ln_telegram_bot.ln import get_invoice, refresh_transfers, send_asset, send_btc
+from rgb_ln_telegram_bot.ln import (
+    decode_rgb_invoice,
+    get_invoice,
+    refresh_transfers,
+    send_asset,
+    send_btc,
+)
+from rgb_ln_telegram_bot.utils import valid_bitcoin_address
 
 from . import msgs
 from . import settings as sett
@@ -100,15 +107,18 @@ async def _validate_user_input(update, user_input, pending_ass_req, pending_btc_
     invoice_data = address = None
     if pending_ass_req:
         try:
-            invoice_data = rgb_lib.Invoice(user_input).invoice_data()
-        except rgb_lib.RgbLibError.InvalidInvoice:
+            invoice_data = decode_rgb_invoice(user_input)
+        except InvalidInvoice:
             if not pending_btc_req:
                 await _reply(update, msgs.INVALID_RGB_INVOICE)
                 return (None, None)
+        except APIException:
+            LOGGER.exception("RGB invoice decoding failed")
+            await _reply(update, msgs.RLN_REQUEST_FAILED)
+            return (None, None)
     if not invoice_data and pending_btc_req:
-        try:
-            address = rgb_lib.Address(user_input, sett.NETWORK)
-        except rgb_lib.RgbLibError.InvalidAddress:
+        address = user_input if valid_bitcoin_address(user_input, sett.NETWORK) else None
+        if not address:
             if not pending_ass_req:
                 await _reply(update, msgs.INVALID_ADDRESS)
                 return (None, None)
@@ -156,15 +166,24 @@ async def _send_to_invoice(
         session.add(pending_ass_req)
         session.commit()
 
-    if invoice_data.network != sett.NETWORK:
+    if invoice_data["network"] != sett.NETWORK:
         return await _reply(update, msgs.RGB_INVOICE_INVALID_NETWORK)
-    recipient_info = rgb_lib.RecipientInfo(invoice_data.recipient_id)
-    if recipient_info.recipient_type() != rgb_lib.RecipientType.BLIND:
+    if invoice_data["recipient_type"] != "Blind":
         return await _reply(update, msgs.RGB_INVOICE_INVALID_TYPE)
+    if invoice_data.get("asset_id") not in (None, sett.ASSET_ID):
+        return await _reply(update, msgs.RGB_INVOICE_WRONG_ASSET)
+    assignment = invoice_data["assignment"]
+    if assignment["type"] != "Any" and not (
+        assignment["type"] == "Fungible" and assignment["value"] in (0, sett.ASSET_AMOUNT_TO_SEND)
+    ):
+        return await _reply(update, msgs.RGB_INVOICE_WRONG_AMOUNT())
+    expiry = invoice_data.get("expiration_timestamp")
+    if expiry is not None and expiry <= time.time():
+        return await _reply(update, msgs.RGB_INVOICE_EXPIRED)
 
     await _reply(update, msgs.SENDING_ASSET())
     try:
-        txid = send_asset(invoice_data.recipient_id, invoice_data.transport_endpoints)
+        txid = send_asset(user_input)
         pending_ass_req.rgb_invoice = user_input
         pending_ass_req.status = SendRequestStatus.SUCCESS
         pending_ass_req.txid = txid

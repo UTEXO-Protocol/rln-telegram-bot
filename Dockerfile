@@ -19,10 +19,10 @@ COPY pyproject.toml poetry.lock README.md ./
 COPY rgb_ln_telegram_bot ./rgb_ln_telegram_bot
 
 RUN poetry install --no-interaction --no-cache --without dev \
-    && /app/.venv/bin/pip uninstall -y pip setuptools wheel 2>/dev/null || true \
+    && /app/.venv/bin/pip uninstall -y pip setuptools wheel \
     && find /app/.venv -depth -type d -name '__pycache__' -exec rm -rf {} + \
     && find /app/.venv -type f -name '*.pyc' -delete \
-    && find /app/.venv -type d -name 'tests' -exec rm -rf {} + 2>/dev/null || true
+    && find /app/.venv -type d -name 'tests' -exec rm -rf {} +
 
 # ---- Runtime ----
 FROM python:3.11-slim-trixie AS runtime
@@ -35,5 +35,6 @@ WORKDIR /app
 
 COPY --from=builder /app/.venv /app/.venv
 COPY --from=builder /app/rgb_ln_telegram_bot /app/rgb_ln_telegram_bot
+COPY rln-revision /app/rln-revision
 
 CMD ["bot"]
