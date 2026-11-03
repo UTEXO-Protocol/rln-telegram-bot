@@ -2,11 +2,14 @@
 
 Telegram bot to test RGB payments on the Lightning Network.
 
-It requires a running instance of [rgb-lightning-node (RLN)].
+It requires an unlocked [rgb-lightning-node (RLN)] deployed separately by DevOps.
+The supported development revision is
+**`89ebe9fdb1be94cbba0b2bd722cea9af297399f1`** from
+[PR #212](https://github.com/UTEXO-Protocol/rgb-lightning-node/pull/212).
 
-It uses [UTEXO rgb-lib] Python bindings **v0.3.0-beta.20** from
-[rgb-lib-python releases](https://github.com/UTEXO-Protocol/rgb-lib-python/releases/tag/v0.3.0-beta.20).
-Python **3.11** is required (`cp311` wheels; platform picked automatically in `pyproject.toml`).
+Python **3.11** is required. RGB invoice decoding is performed by RLN itself;
+the bot no longer depends on platform-specific `rgb-lib` Python wheels.
+Bitcoin address checks use `embit` (Base58Check, Bech32 and Bech32m).
 
 ## Build and run
 
@@ -28,11 +31,17 @@ cp config.ini.sample config.ini
 Set at least:
 
 - `API_TOKEN` — Telegram bot token
-- `ASSET_ID` — RGB asset ID from `POST /issueassetnia` on your RLN node
+- `ASSET_ID` — a funded fungible RGB asset ID known to your RLN node
 - `LN_NODE_URL` — RLN HTTP API (e.g. `http://localhost:3001`)
 - `LN_ANNOUNCEMENT_ADDR` — LN peer host:port (e.g. `127.0.0.1:9735` for local tests)
 
-RLN must be **unlocked** and reachable. If authentication is enabled, set `RLN_AUTH_TOKEN`.
+RLN must be funded, **unlocked** and reachable. If authentication is enabled,
+set `RLN_AUTH_TOKEN`. Settings are read from `config.ini`; `.env` is not loaded.
+The bot connects to this external node over HTTP and does not build or start it.
+
+Use the protocol-1-compatible RGB proxy required by PR #212. BFA assets require
+`eth_rpc_url` configured on each participating RLN node. Mainnet Lightning is
+disabled in this RLN revision.
 
 Install and run (macOS / Linux host):
 
@@ -41,8 +50,6 @@ poetry env use python3.11
 poetry install
 poetry run bot
 ```
-
-`poetry install` downloads the matching rgb-lib wheel from GitHub (macOS arm64 or Linux manylinux).
 
 ## Docker
 
@@ -72,6 +79,7 @@ LN_NODE_URL=http://host.docker.internal:3001
 ## Develop
 
 ```sh
+poetry run python -m unittest discover -s tests -v
 poetry run pylint rgb_ln_telegram_bot
 poetry run black rgb_ln_telegram_bot
 poetry run isort --profile black rgb_ln_telegram_bot
@@ -80,6 +88,8 @@ poetry run flake8 rgb_ln_telegram_bot
 poetry run pip-audit
 ```
 
+The tests use temporary configuration and SQLite databases; they do not read
+your `config.ini` or connect to Telegram.
+
 [poetry]: https://python-poetry.org/docs/
 [rgb-lightning-node (RLN)]: https://github.com/UTEXO-Protocol/rgb-lightning-node
-[UTEXO rgb-lib]: https://github.com/UTEXO-Protocol/rgb-lib

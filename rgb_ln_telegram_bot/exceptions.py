@@ -5,6 +5,10 @@ class APIException(Exception):
     """API error."""
 
 
+class InvalidInvoice(APIException):
+    """RLN could not decode the supplied invoice."""
+
+
 class AllocationsAlreadyAvailable(Exception):
     """Allocations already available error."""
 

@@ -60,6 +60,15 @@ This RGB invoice is requesting to receive in witness but the bot supports \
 only the blind mode, please send another one\.
 """
 
+RGB_INVOICE_WRONG_ASSET = "This RGB invoice requests a different asset\\."
+
+RGB_INVOICE_WRONG_AMOUNT = (
+    lambda: f"Please send an RGB invoice for {sett.ASSET_AMOUNT_TO_SEND} units "
+    "or no fixed amount\\."
+)
+
+RGB_INVOICE_EXPIRED = "This RGB invoice has expired, please send another one\\."
+
 ASSET_SENT = (
     lambda: f"""
 I have sent you {sett.ASSET_AMOUNT_TO_SEND} {sett.ASSET_TICKER} with \

@@ -3,11 +3,11 @@
 API_TOKEN=YourAPIToken
 # path for the bot's data directory
 DATA_DIR=data
-# URL where the bot can access the RGB LN node
+# Unlocked RLN from PR #212, deployed separately; supported commit is in README.md
 LN_NODE_URL=http://localhost:3001
 # ID of the asset the bot uses
 ASSET_ID=rgb:2uSYWzE-YvkUEXg6C-vK7gV5pqj-4LAun1jky-D73672LhW-unCWjMA
-# asset amount to send to users who paid an invoice
+# fixed on-chain faucet payout in base units (invoice amount must match or be unspecified)
 ASSET_AMOUNT_TO_SEND=42
 # sat amount to send to users requesting BTC funds
 SAT_AMOUNT_TO_SEND=50000
